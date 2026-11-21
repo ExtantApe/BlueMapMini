@@ -19,15 +19,53 @@ public record HudConfig(
 
     public enum Channel { BOSS_BAR, ACTION_BAR }
 
-    /** Who a share can reach before other plugins filter it. */
-    public enum ShareScope {
+    /**
+     * Who a player may send their coordinates to (owner, 2026-11-21, D254). Other plugins listening to the share
+     * event can always narrow a share further.
+     */
+    public enum ShareAudience {
+        /** Nobody: sharing is off. The default. */
+        OFF("off"),
+        /** Whoever Mayor's player groups allow, the same as chat. Off (fail closed) if Mayor 0.5.0+ isn't running. */
+        MAYOR("mayor"),
+        /** Players in the sender's exact world. */
+        WORLD("world"),
         /** Players in the sender's world, counting its _nether and _the_end as the same world. */
-        WORLD_GROUP,
-        /** Everyone online, for servers whose rules plugin narrows each share through the share event. */
-        ALL_ONLINE
+        WORLD_GROUP("world-group"),
+        /** Everyone online. */
+        SERVER("server");
+
+        public final String key;
+
+        ShareAudience(String key) {
+            this.key = key;
+        }
+
+        /** The setting's value, or null if it isn't one of the five. */
+        public static ShareAudience of(String key) {
+            if (key == null) return null;
+            for (ShareAudience a : values()) if (a.key.equalsIgnoreCase(key.trim())) return a;
+            return null;
+        }
+
+        /**
+         * share.audience, or for a config written before it existed, the older keys it replaces: enabled false is off,
+         * require-mayor true (their default) is mayor, then candidates all-online is server and world-group is
+         * world-group. With none of them set, off. An unknown value is off, so a typo never opens sharing up.
+         */
+        public static ShareAudience resolve(String audience, Boolean enabled, Boolean requireMayor, String candidates) {
+            if (audience != null) {
+                ShareAudience a = of(audience);
+                return a == null ? OFF : a;
+            }
+            if (enabled == null && requireMayor == null && candidates == null) return OFF;
+            if (Boolean.FALSE.equals(enabled)) return OFF;
+            if (!Boolean.FALSE.equals(requireMayor)) return MAYOR;
+            return "all-online".equalsIgnoreCase(candidates) ? SERVER : WORLD_GROUP;
+        }
     }
 
-    public record Share(boolean enabled, ShareScope candidates, int cooldownSeconds, boolean log, boolean requireMayor) {}
+    public record Share(ShareAudience audience, boolean audienceUnknown, int cooldownSeconds, boolean log) {}
 
     public record Tiles(String source, String webRoot, String httpUrl, int refreshMinutes,
                         int cacheChunks, Map<String, String> mapOverrides) {}
@@ -133,12 +171,16 @@ public record HudConfig(
                 c.getBoolean("pack.bedrock-exempt", true),
                 c.getBoolean("pack.re-send-on-removal", true));
 
+        // Read without the jar's defaults, so an older config with no share.audience keeps what its old keys said.
+        String audienceKey = c.contains("share.audience", true) ? c.getString("share.audience") : null;
         Share share = new Share(
-                c.getBoolean("share.enabled", true),
-                "all-online".equalsIgnoreCase(c.getString("share.candidates", "world-group")) ? ShareScope.ALL_ONLINE : ShareScope.WORLD_GROUP,
+                ShareAudience.resolve(audienceKey,
+                        c.contains("share.enabled", true) ? c.getBoolean("share.enabled") : null,
+                        c.contains("share.require-mayor", true) ? c.getBoolean("share.require-mayor") : null,
+                        c.contains("share.candidates", true) ? c.getString("share.candidates") : null),
+                audienceKey != null && ShareAudience.of(audienceKey) == null,
                 clamp(c.getInt("share.cooldown-seconds", 30), 0, 3600),
-                c.getBoolean("share.log", true),
-                c.getBoolean("share.require-mayor", true));
+                c.getBoolean("share.log", true));
 
         return new HudConfig(tiles, hud, commands, fullscreen, players, markers, pack, share);
     }
