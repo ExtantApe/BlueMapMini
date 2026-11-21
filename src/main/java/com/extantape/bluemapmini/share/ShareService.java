@@ -50,25 +50,28 @@ public final class ShareService {
         return world;
     }
 
-    /** Whether shares can reach past the sender's world: only when configured and a plugin is there to filter them. */
-    public boolean reachesAllOnline() {
-        return config().candidates() == HudConfig.ShareScope.ALL_ONLINE && CoordinateShareEvent.hasListeners();
-    }
-
-    /** Whether the server asks for all-online but nothing filters it, so shares stay within the world group. */
-    public boolean allOnlineWithoutFilter() {
-        return config().candidates() == HudConfig.ShareScope.ALL_ONLINE && !CoordinateShareEvent.hasListeners();
+    /**
+     * Whether a player in {@code otherWorld} can be offered a share from {@code senderWorld} under this audience
+     * (D254). Mayor's mode offers everyone and leaves narrowing to Mayor through the share event; off offers nobody.
+     */
+    static boolean offered(HudConfig.ShareAudience audience, String senderWorld, String otherWorld) {
+        return switch (audience) {
+            case OFF -> false;
+            case WORLD -> senderWorld.equals(otherWorld);
+            case WORLD_GROUP, MAYOR_WORLD_GROUP -> worldGroup(senderWorld).equals(worldGroup(otherWorld));
+            case MAYOR, SERVER -> true;
+        };
     }
 
     /** Players the sender can offer their coordinates to, by name. */
     public List<Player> candidates(Player sender) {
-        boolean anyWorld = reachesAllOnline();
-        String group = worldGroup(sender.getWorld().getName());
+        HudConfig.ShareAudience audience = config().audience();
+        String here = sender.getWorld().getName();
         List<Player> result = new ArrayList<>();
         for (Player other : Bukkit.getOnlinePlayers()) {
             if (other.equals(sender) || !sender.canSee(other)) continue;
             if (!com.extantape.bluemapmini.Perms.has(other, RECEIVE) || !plugin.hud().session(other).settings().receiveShares) continue;
-            if (!anyWorld && !worldGroup(other.getWorld().getName()).equals(group)) continue;
+            if (!offered(audience, here, other.getWorld().getName())) continue;
             result.add(other);
         }
         result.sort(Comparator.comparing(p -> p.getName().toLowerCase(Locale.ROOT)));
@@ -85,7 +88,7 @@ public final class ShareService {
 
     /** Why the sender can't share right now, or null if they can. */
     public String blocked(Player sender) {
-        if (!config().enabled()) return "Sharing coordinates is turned off on this server.";
+        if (config().audience() == HudConfig.ShareAudience.OFF) return "Sharing coordinates is turned off on this server.";
         if (!com.extantape.bluemapmini.Perms.has(sender, SEND)) return "You can't share your coordinates here.";
         String guard = olderMayor();
         if (guard != null) {
@@ -185,14 +188,15 @@ public final class ShareService {
     }
 
     /**
-     * Shares follow Mayor's chat rules, and Mayor before 0.5.0 listens for a share event BlueMapMini doesn't send. So
-     * sharing is off (fail closed) unless Mayor 0.5.0 or newer is installed, or the server turned require-mayor off.
-     * The version is null when Mayor isn't installed.
+     * In Mayor's modes, shares follow Mayor's player groups, so they're off (fail closed) unless Mayor 0.5.0 or newer
+     * is running. In every mode, a Mayor older than 0.5.0 turns sharing off, because it listens for a share event
+     * BlueMapMini doesn't send and would let shares skip its groups. The version is null when Mayor isn't running.
+     * Returns why sharing is off, or null.
      */
-    static String olderMayor(String version, boolean requireMayor) {
-        if (version == null) return requireMayor
-                ? "Coordinate sharing is off because it follows Mayor's chat rules and Mayor isn't installed. Install Mayor 0.5.0 or newer, or set share.require-mayor: false on a server without chat rules."
-                : null;
+    static String mayorGuard(HudConfig.ShareAudience audience, String version) {
+        boolean needsMayor = audience == HudConfig.ShareAudience.MAYOR || audience == HudConfig.ShareAudience.MAYOR_WORLD_GROUP;
+        if (version == null && !needsMayor) return null;
+        if (version == null) return "Coordinate sharing is off: share.audience follows Mayor's player groups, and Mayor isn't running. Install Mayor 0.5.0 or newer, or pick another share.audience.";
         String[] p = version.split("[.-]");
         try {
             int major = Integer.parseInt(p[0]), minor = p.length > 1 ? Integer.parseInt(p[1]) : 0;
@@ -200,12 +204,12 @@ public final class ShareService {
         } catch (NumberFormatException e) {
             // Unreadable version: treat it as too old.
         }
-        return "Coordinate sharing is off because Mayor " + version + " can't see BlueMapMini's shares, so they'd skip its chat circles. Update Mayor to 0.5.0 or newer.";
+        return "Coordinate sharing is off because Mayor " + version + " can't see BlueMapMini's shares, so they'd skip its player groups. Update Mayor to 0.5.0 or newer.";
     }
 
     private String olderMayor() {
         org.bukkit.plugin.Plugin mayor = plugin.getServer().getPluginManager().getPlugin("Mayor");
         boolean on = mayor != null && mayor.isEnabled();
-        return olderMayor(on ? mayor.getPluginMeta().getVersion() : null, config().requireMayor());
+        return mayorGuard(config().audience(), on ? mayor.getPluginMeta().getVersion() : null);
     }
 }

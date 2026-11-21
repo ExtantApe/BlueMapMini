@@ -261,12 +261,19 @@ public final class BlueMapMiniPlugin extends JavaPlugin implements Listener {
         }
     }
 
-    /** Once every plugin has started, says if all-online sharing has nothing to filter it. */
+    /** Once every plugin has started, says who coordinates can be shared with, and warns about a bad setting. */
     @EventHandler
     public void onServerLoad(ServerLoadEvent event) {
-        if (shares.allOnlineWithoutFilter()) {
-            getLogger().warning("share.candidates is all-online, but no plugin filters shares, so they stay within each sender's world group.");
-        }
+        var share = config.share();
+        if (share.audienceUnknown()) getLogger().warning("share.audience isn't one of off, mayor, mayor-world-group, world, world-group or server, so sharing is off.");
+        getLogger().info("Coordinate sharing: " + switch (share.audience()) {
+            case OFF -> "off.";
+            case MAYOR -> "to whoever Mayor's player groups allow.";
+            case MAYOR_WORLD_GROUP -> "to players in the same world group whom Mayor's player groups allow.";
+            case WORLD -> "to players in the same world.";
+            case WORLD_GROUP -> "to players in the same world, counting its Nether and End.";
+            case SERVER -> "to anyone online.";
+        });
     }
 
     /** A failed pack download gets another try when the player changes world. */

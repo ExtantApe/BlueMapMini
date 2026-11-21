@@ -127,17 +127,20 @@ pack:
 
 share:
   # /hud share sends a player's coordinates to people they choose. Nothing is ever shared automatically.
-  enabled: true
-  # Who can be offered a share: world-group is players in the sender's world, counting its _nether and
-  # _the_end as the same world. all-online is everyone, for servers whose rules plugin narrows each share
-  # through CoordinateShareEvent; with no such plugin listening it acts like world-group. Players who
-  # turned shares off (/hud hide shares) or lack bluemapmini.share.receive are never offered.
-  candidates: world-group
+  # Who they can send to:
+  #   off          nobody, sharing is off (the default)
+  #   mayor        whoever Mayor's player groups allow, the same as chat. Needs Mayor 0.5.0 or newer; without it,
+  #                sharing stays off and the console says why
+  #   mayor-world-group  players in the same world group (its _nether and _the_end count) whom Mayor's groups
+  #                also allow. Needs Mayor 0.5.0 or newer, like mayor
+  #   world        players in the same world
+  #   world-group  players in the same world, counting its _nether and _the_end as the same world
+  #   server       anyone online
+  # Any plugin that listens to the share event can still narrow a share. Players who turned shares off
+  # (/hud hide shares) or lack bluemapmini.share.receive are never offered. An unknown value counts as off.
+  # A Mayor older than 0.5.0 turns sharing off in every mode.
+  audience: off
   # Seconds a player waits between shares, so it can't be used to spam.
   cooldown-seconds: 30
   # Log each share to the console: who sent it, where, and who received it.
   log: true
-  # Shares only while Mayor 0.5.0 or newer is installed, so every share follows the same rules as chat. With true
-  # and no Mayor, /hud share stays off and the console says why. Set false only on a server without chat rules,
-  # where sharing to anyone in the world group is fine.
-  require-mayor: true

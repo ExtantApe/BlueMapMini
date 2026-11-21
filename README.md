@@ -91,11 +91,18 @@ Up to 8 themes fit in the pack. Every built-in theme passes the same readability
 
 `/hud share` sends your current coordinates to people you choose, as a chat message with the coordinates and the dimension, such as `Alex shared where they are: 120 64 -35 in the Overworld`. Clicking the numbers copies them. Nothing is shared unless a player asks, and there's no teleport link.
 
-- **Who can receive:** by default, players in the sender's world, counting its `_nether` and `_the_end` as the same world, who can see the sender, have `bluemapmini.share.receive`, and haven't turned shares off with `/hud hide shares`.
-- **Feedback:** the sender is told exactly who got their coordinates, and who couldn't.
-- **Limits:** a player waits `share.cooldown-seconds` (30 by default) between shares, and each share is logged to the console. `share.enabled: false` turns sharing off.
+- **Who can receive:** set by `share.audience`, which is `off` by default, so nothing can be shared until an admin picks one:
+  - `mayor`: whoever Mayor's player groups allow, the same as chat. Needs Mayor 0.5.0 or newer. Without it, sharing stays off and the console says why.
+  - `mayor-world-group`: players in the same world group whom Mayor's groups also allow. Needs Mayor 0.5.0 or newer.
+  - `world`: players in the same world.
+  - `world-group`: players in the same world, counting its `_nether` and `_the_end` as the same world.
+  - `server`: anyone online.
 
-**Your server's own rules.** BlueMapMini fires `com.extantape.bluemapmini.api.CoordinateShareEvent` on the main thread before each share. It carries the sender, the world, the block coordinates and a mutable set of recipients. A plugin can remove recipients, for example to match who may chat with whom, or cancel the share. With `share.candidates: all-online`, recipients can include every player online, so that such a plugin can follow rules that reach across worlds. BlueMapMini only widens a share like that while a plugin is listening to the event, and logs a warning at startup if nothing is. To build against it, depend on BlueMapMini as a server dependency with `join-classpath: true` in your `paper-plugin.yml`.
+  In every mode a receiver must be able to see the sender, have `bluemapmini.share.receive`, and not have turned shares off with `/hud hide shares`. An unknown value counts as `off`. A Mayor older than 0.5.0 turns sharing off in every mode. A config from before 0.4.0 gets the narrowest mode matching its old `enabled`, `candidates` and `require-mayor` keys, so an upgrade never widens sharing: the old defaults become `mayor-world-group`.
+- **Feedback:** the sender is told exactly who got their coordinates, and who couldn't.
+- **Limits:** a player waits `share.cooldown-seconds` (30 by default) between shares, and each share is logged to the console.
+
+**Your server's own rules.** BlueMapMini fires `com.extantape.bluemapmini.api.CoordinateShareEvent` on the main thread before each share. It carries the sender, the world, the block coordinates and a mutable set of recipients. A plugin can remove recipients, for example to match who may chat with whom, or cancel the share. In the `mayor` and `server` modes, recipients start as everyone online, so such a plugin can follow rules that reach across worlds. To build against it, depend on BlueMapMini as a server dependency with `join-classpath: true` in your `paper-plugin.yml`.
 
 ## Resource packs
 

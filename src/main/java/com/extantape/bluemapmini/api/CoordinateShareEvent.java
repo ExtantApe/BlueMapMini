@@ -13,8 +13,8 @@ import java.util.Set;
  * server's chat rules, can decide who may receive them. Remove recipients to narrow the share, or cancel it
  * to send nothing. Players who turned shares off, or lack {@code bluemapmini.share.receive}, are already gone.
  *
- * <p>When {@code share.candidates} is {@code all-online}, the recipients can include players in other
- * worlds, and BlueMapMini only does that while at least one plugin listens to this event.
+ * <p>In the {@code mayor} and {@code server} modes of {@code share.audience}, the recipients start as everyone
+ * online, including players in other worlds.
  */
 public final class CoordinateShareEvent extends Event implements Cancellable {
     private static final HandlerList HANDLERS = new HandlerList();
@@ -56,6 +56,6 @@ public final class CoordinateShareEvent extends Event implements Cancellable {
 
     public static HandlerList getHandlerList() { return HANDLERS; }
 
-    /** Whether any plugin listens, which {@code all-online} needs before it widens a share. */
+    /** Whether any plugin listens. */
     public static boolean hasListeners() { return HANDLERS.getRegisteredListeners().length > 0; }
 }
