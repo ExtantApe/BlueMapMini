@@ -265,10 +265,11 @@ public final class BlueMapMiniPlugin extends JavaPlugin implements Listener {
     @EventHandler
     public void onServerLoad(ServerLoadEvent event) {
         var share = config.share();
-        if (share.audienceUnknown()) getLogger().warning("share.audience isn't one of off, mayor, world, world-group or server, so sharing is off.");
+        if (share.audienceUnknown()) getLogger().warning("share.audience isn't one of off, mayor, mayor-world-group, world, world-group or server, so sharing is off.");
         getLogger().info("Coordinate sharing: " + switch (share.audience()) {
             case OFF -> "off.";
             case MAYOR -> "to whoever Mayor's player groups allow.";
+            case MAYOR_WORLD_GROUP -> "to players in the same world group whom Mayor's player groups allow.";
             case WORLD -> "to players in the same world.";
             case WORLD_GROUP -> "to players in the same world, counting its Nether and End.";
             case SERVER -> "to anyone online.";

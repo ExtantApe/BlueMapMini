@@ -58,7 +58,7 @@ public final class ShareService {
         return switch (audience) {
             case OFF -> false;
             case WORLD -> senderWorld.equals(otherWorld);
-            case WORLD_GROUP -> worldGroup(senderWorld).equals(worldGroup(otherWorld));
+            case WORLD_GROUP, MAYOR_WORLD_GROUP -> worldGroup(senderWorld).equals(worldGroup(otherWorld));
             case MAYOR, SERVER -> true;
         };
     }
@@ -188,13 +188,15 @@ public final class ShareService {
     }
 
     /**
-     * In Mayor's mode, shares follow Mayor's player groups, and Mayor before 0.5.0 listens for a share event BlueMapMini
-     * doesn't send. So that mode is off (fail closed) unless Mayor 0.5.0 or newer is running. Other modes don't need
-     * Mayor. The version is null when Mayor isn't running. Returns why sharing is off, or null.
+     * In Mayor's modes, shares follow Mayor's player groups, so they're off (fail closed) unless Mayor 0.5.0 or newer
+     * is running. In every mode, a Mayor older than 0.5.0 turns sharing off, because it listens for a share event
+     * BlueMapMini doesn't send and would let shares skip its groups. The version is null when Mayor isn't running.
+     * Returns why sharing is off, or null.
      */
     static String mayorGuard(HudConfig.ShareAudience audience, String version) {
-        if (audience != HudConfig.ShareAudience.MAYOR) return null;
-        if (version == null) return "Coordinate sharing is off: share.audience is mayor, so shares follow Mayor's player groups, and Mayor isn't running. Install Mayor 0.5.0 or newer, or pick another share.audience.";
+        boolean needsMayor = audience == HudConfig.ShareAudience.MAYOR || audience == HudConfig.ShareAudience.MAYOR_WORLD_GROUP;
+        if (version == null && !needsMayor) return null;
+        if (version == null) return "Coordinate sharing is off: share.audience follows Mayor's player groups, and Mayor isn't running. Install Mayor 0.5.0 or newer, or pick another share.audience.";
         String[] p = version.split("[.-]");
         try {
             int major = Integer.parseInt(p[0]), minor = p.length > 1 ? Integer.parseInt(p[1]) : 0;

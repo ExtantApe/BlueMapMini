@@ -93,11 +93,12 @@ Up to 8 themes fit in the pack. Every built-in theme passes the same readability
 
 - **Who can receive:** set by `share.audience`, which is `off` by default, so nothing can be shared until an admin picks one:
   - `mayor`: whoever Mayor's player groups allow, the same as chat. Needs Mayor 0.5.0 or newer. Without it, sharing stays off and the console says why.
+  - `mayor-world-group`: players in the same world group whom Mayor's groups also allow. Needs Mayor 0.5.0 or newer.
   - `world`: players in the same world.
   - `world-group`: players in the same world, counting its `_nether` and `_the_end` as the same world.
   - `server`: anyone online.
 
-  In every mode a receiver must be able to see the sender, have `bluemapmini.share.receive`, and not have turned shares off with `/hud hide shares`. An unknown value counts as `off`. A config from before 0.4.0 keeps what its old `enabled`, `candidates` and `require-mayor` keys gave it.
+  In every mode a receiver must be able to see the sender, have `bluemapmini.share.receive`, and not have turned shares off with `/hud hide shares`. An unknown value counts as `off`. A Mayor older than 0.5.0 turns sharing off in every mode. A config from before 0.4.0 gets the narrowest mode matching its old `enabled`, `candidates` and `require-mayor` keys, so an upgrade never widens sharing: the old defaults become `mayor-world-group`.
 - **Feedback:** the sender is told exactly who got their coordinates, and who couldn't.
 - **Limits:** a player waits `share.cooldown-seconds` (30 by default) between shares, and each share is logged to the console.
 

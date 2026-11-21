@@ -22,6 +22,21 @@ class MayorGuardTest {
     }
 
     @Test
+    void mayorWorldGroupFailsClosedLikeMayor() {
+        assertNotNull(ShareService.mayorGuard(ShareAudience.MAYOR_WORLD_GROUP, null));
+        assertNull(ShareService.mayorGuard(ShareAudience.MAYOR_WORLD_GROUP, "0.7.0"));
+        assertTrue(ShareService.offered(ShareAudience.MAYOR_WORLD_GROUP, "survival", "survival_nether"));
+        assertFalse(ShareService.offered(ShareAudience.MAYOR_WORLD_GROUP, "kids", "survival"));
+    }
+
+    @Test
+    void anOldMayorTurnsEveryModeOff() {
+        for (ShareAudience a : new ShareAudience[] {ShareAudience.WORLD, ShareAudience.WORLD_GROUP, ShareAudience.SERVER}) {
+            assertNotNull(ShareService.mayorGuard(a, "0.4.0"), a.key);
+        }
+    }
+
+    @Test
     void otherModesDoNotNeedMayor() {
         for (ShareAudience a : new ShareAudience[] {ShareAudience.WORLD, ShareAudience.WORLD_GROUP, ShareAudience.SERVER}) {
             assertNull(ShareService.mayorGuard(a, null), a.key);
@@ -63,10 +78,23 @@ class MayorGuardTest {
     @Test
     void olderConfigsKeepWhatTheyHad() {
         assertEquals(ShareAudience.OFF, ShareAudience.resolve(null, false, true, "world-group"));
-        assertEquals(ShareAudience.MAYOR, ShareAudience.resolve(null, true, null, "world-group"), "require-mayor defaulted to true");
+        assertEquals(ShareAudience.MAYOR_WORLD_GROUP, ShareAudience.resolve(null, true, null, "world-group"), "old defaults: Mayor AND world group");
+        assertEquals(ShareAudience.MAYOR_WORLD_GROUP, ShareAudience.resolve(null, null, null, "world-group"));
         assertEquals(ShareAudience.MAYOR, ShareAudience.resolve(null, true, true, "all-online"));
         assertEquals(ShareAudience.WORLD_GROUP, ShareAudience.resolve(null, true, false, "world-group"));
-        assertEquals(ShareAudience.SERVER, ShareAudience.resolve(null, true, false, "all-online"));
+        assertEquals(ShareAudience.WORLD_GROUP, ShareAudience.resolve(null, true, false, "all-online"), "all-online without a filter stayed in the world group");
+    }
+
+    @Test
+    void migrationNeverOffersMoreThanTheOldSettingsDid() {
+        // Old reach: world group always, all-online only through Mayor. Check who's offered, kid in kids to adult in survival.
+        String[][] old = {{"true", "world-group"}, {"true", "all-online"}, {"false", "world-group"}, {"false", "all-online"}};
+        for (String[] o : old) {
+            ShareAudience a = ShareAudience.resolve(null, true, Boolean.parseBoolean(o[0]), o[1]);
+            boolean crossWorldBefore = o[0].equals("true") && o[1].equals("all-online");
+            assertEquals(crossWorldBefore, ShareService.offered(a, "kids", "survival"), String.join(",", o) + " -> " + a.key);
+            assertTrue(ShareService.offered(a, "kids", "kids_nether"), "the world group was always offered");
+        }
     }
 
     @Test

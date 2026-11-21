@@ -25,9 +25,9 @@ class ShareConfigTest {
     }
 
     @Test
-    void olderFileWithRequireMayorStaysOnMayor() throws Exception {
+    void olderFileWithRequireMayorBecomesMayorWithinTheWorldGroup() throws Exception {
         var c = withJarDefaults("share:\n  enabled: true\n  candidates: world-group\n  require-mayor: true\n");
-        assertEquals(HudConfig.ShareAudience.MAYOR, HudConfig.from(c).share().audience());
+        assertEquals(HudConfig.ShareAudience.MAYOR_WORLD_GROUP, HudConfig.from(c).share().audience());
     }
 
     @Test

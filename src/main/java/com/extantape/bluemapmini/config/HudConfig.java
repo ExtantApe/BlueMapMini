@@ -28,6 +28,8 @@ public record HudConfig(
         OFF("off"),
         /** Whoever Mayor's player groups allow, the same as chat. Off (fail closed) if Mayor 0.5.0+ isn't running. */
         MAYOR("mayor"),
+        /** Players in the sender's world group whom Mayor's player groups also allow. Off without Mayor 0.5.0+. */
+        MAYOR_WORLD_GROUP("mayor-world-group"),
         /** Players in the sender's exact world. */
         WORLD("world"),
         /** Players in the sender's world, counting its _nether and _the_end as the same world. */
@@ -49,9 +51,10 @@ public record HudConfig(
         }
 
         /**
-         * share.audience, or for a config written before it existed, the older keys it replaces: enabled false is off,
-         * require-mayor true (their default) is mayor, then candidates all-online is server and world-group is
-         * world-group. With none of them set, off. An unknown value is off, so a typo never opens sharing up.
+         * share.audience, or for a config written before it existed, the narrowest mode matching the older keys, so an
+         * upgrade never widens sharing: enabled false is off; require-mayor true (their default) is mayor with
+         * all-online and mayor-world-group otherwise; require-mayor false is world-group, because all-online without a
+         * filtering plugin stayed in the world group. With none of them set, off. An unknown value is off.
          */
         public static ShareAudience resolve(String audience, Boolean enabled, Boolean requireMayor, String candidates) {
             if (audience != null) {
@@ -60,8 +63,9 @@ public record HudConfig(
             }
             if (enabled == null && requireMayor == null && candidates == null) return OFF;
             if (Boolean.FALSE.equals(enabled)) return OFF;
-            if (!Boolean.FALSE.equals(requireMayor)) return MAYOR;
-            return "all-online".equalsIgnoreCase(candidates) ? SERVER : WORLD_GROUP;
+            boolean allOnline = "all-online".equalsIgnoreCase(candidates);
+            if (!Boolean.FALSE.equals(requireMayor)) return allOnline ? MAYOR : MAYOR_WORLD_GROUP;
+            return WORLD_GROUP;
         }
     }
 
