@@ -46,6 +46,8 @@ public record HudConfig(
         /** The setting's value, or null if it isn't one of the five. */
         public static ShareAudience of(String key) {
             if (key == null) return null;
+            // YAML reads a bare off as the boolean false, so audience: off arrives as "false". It still means off.
+            if (key.trim().equalsIgnoreCase("false")) return OFF;
             for (ShareAudience a : values()) if (a.key.equalsIgnoreCase(key.trim())) return a;
             return null;
         }

@@ -26,6 +26,9 @@ if [ "${BMM_ACCEPT_EULA:-}" != "1" ]; then
 fi
 
 PAPER=paper-$VERSION.jar
+# Exactly one plugin jar, or the run could test an old build left in build/libs (it did, 2026-11-24).
+HUD_JARS=("$REPO"/build/libs/BlueMapMini-*.jar)
+[ ${#HUD_JARS[@]} -le 1 ] || { echo "More than one BlueMapMini jar in build/libs: ${HUD_JARS[*]##*/}. Run ./gradlew clean build."; exit 1; }
 HUD_JAR=$(ls "$REPO"/build/libs/BlueMapMini-*.jar 2>/dev/null | head -1)
 HELPER_JAR=$REPO/test/live/helper/build/libs/LiveTestHelper.jar
 CONFLICT_JAR=$REPO/test/live/conflict/build/libs/LiveTestConflict.jar

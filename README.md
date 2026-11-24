@@ -4,7 +4,7 @@ BlueMapMini: a BlueMap minimap and coordinates HUD for Paper, rendered in game f
 
 It's an unofficial add-on for BlueMap and isn't affiliated with BlueMap's authors.
 
-**Status:** pre-release, version 0.3.0. It has passed a full test suite on live Paper 26.1.2, 26.2 and 26.3 servers with real BlueMap tiles, using a protocol bot. It hasn't been seen in a real game client yet. See [Testing](#testing).
+**Status:** pre-release, version 0.4.1. 0.3.0 passed a full test suite on live Paper 26.1.2, 26.2 and 26.3 servers with real BlueMap tiles, using a protocol bot. 0.4.1 (the share audience setting) passed it again on 26.3 only, 334 of 335 with the client font check skipped, plus the real Mayor test. It hasn't been seen in a real game client yet. See [Testing](#testing).
 
 - Requires Paper 26.1 or newer, Java 25, and a BlueMap version that matches your server (see below). Java Edition only. Paper 1.21.11 and older aren't supported.
 - Works alongside other resource packs, because it never overrides a shader and only adds its own files.

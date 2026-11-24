@@ -1,5 +1,5 @@
 // BlueMapMini with the real Mayor: shares follow chat circles. Without Mayor, sharing is off by default rather than
-// unfiltered, and a server without chat rules can turn it on with share.require-mayor: false.
+// unfiltered, and a server without chat rules can choose another audience, such as server.
 // Usage: node mayor.js <dir> <jar> <port> <mayorJar>, <dir> and <jar> relative to the work folder.
 const { Server, Bot, check, section, summary, sleep, until } = require('./lib.js');
 const fs = require('fs');
@@ -36,6 +36,7 @@ async function joinAll(names) {
     fs.copyFileSync(newJar, installed);
     fs.mkdirSync(s.path('plugins', 'Mayor'), { recursive: true });
     fs.writeFileSync(s.path('plugins', 'Mayor', 'config.yml'), CONFIG);
+    s.setConfig({ 'share.audience': 'mayor' });
     await s.start(); await sleep(4000);
     check('Mayor found BlueMapMini\'s share event', /BlueMapMini found: coordinate shares follow the same rules as chat/.test(s.log));
     bots = await joinAll(['Tester', 'Alex', 'Blair', 'Casey']);
@@ -53,7 +54,7 @@ async function joinAll(names) {
     for (const b of Object.values(bots)) await b.cleanQuit();
     await s.stop();
 
-    section('BlueMapMini without Mayor, default settings: sharing is off, not unfiltered');
+    section('BlueMapMini without Mayor, audience: mayor: sharing is off, not unfiltered');
     fs.rmSync(installed, { force: true });
     await s.start(); await sleep(4000);
     bots = await joinAll(['Tester', 'Alex']);
@@ -63,13 +64,12 @@ async function joinAll(names) {
     await sleep(600);
     check('The sender is told sharing is off', /Sharing coordinates is off on this server for now/.test(off || ''), off);
     check('and nobody receives anything', !heard(bots.Alex, m));
-    check("The log says Mayor isn't installed", /follows Mayor's chat rules and Mayor isn't installed/.test(s.since(mark)));
+    check("The log says Mayor isn't installed", /share\.audience follows Mayor's player groups, and Mayor isn't running/.test(s.since(mark)));
     for (const b of Object.values(bots)) await b.cleanQuit();
     await s.stop();
 
-    section('BlueMapMini without Mayor, require-mayor: false: sharing works');
-    const cfg = s.path('plugins', 'BlueMapMini', 'config.yml');
-    fs.writeFileSync(cfg, fs.readFileSync(cfg, 'utf8').replace('require-mayor: true', 'require-mayor: false'));
+    section('BlueMapMini without Mayor, audience: server: sharing works');
+    s.setConfig({ 'share.audience': 'server' });
     await s.start(); await sleep(4000);
     bots = await joinAll(['Tester', 'Alex']);
     m = bots.Alex.chat.length;
