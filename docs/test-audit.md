@@ -2,6 +2,19 @@
 
 Kept by this repo's owning session (Minecraft: Plugins Lead), per `~/Code/CLAUDE.md`, "Test self-audits". Newest first.
 
+## 2026-11-24: share.audience (0.4.1)
+
+| Promise | Covered by |
+| --- | --- |
+| One `share.audience` setting; unknown values fail closed with a warning, at startup and after a reload | unit `ShareConfigTest.explicitAudienceIsRead`, `bareOffIsOffWithoutAWarning`; live "An unknown audience fails closed, with a warning" |
+| A bare `off` means off, with no warning | unit `bareOffIsOffWithoutAWarning`; live "audience: off gives no typo warning" |
+| An upgrade never widens sharing | unit `olderFileWithRequireMayorBecomesMayorWithinTheWorldGroup`, `serverWithOldDefaultsAndAllOnlineBecomesMayor` |
+| `mayor` follows Mayor's circles and stays off without Mayor | live `mayor` (8 checks, real Mayor 0.7.0); live "audience: mayor with no Mayor installed stays off (fail closed)" |
+| `world-group` and `server` reach who they say | live "world-group leaves out a player in another world", "server reaches a player in another world" |
+
+- Gap found and fixed: `test/live/run.sh` took the first jar in `build/libs`, so runs after a version bump could test an old build. It now refuses when there's more than one.
+- Gaps skipped: `world` and `mayor-world-group` have no live check of their own; unit tests cover how they're read, and the share code is the same path as `world-group` and `mayor`.
+
 ## 2026-11-10: pack.bind (0.2.1)
 
 | Promise | Covered by |

@@ -37,4 +37,24 @@ class ShareConfigTest {
         assertEquals(HudConfig.ShareAudience.OFF, typo.audience());
         assertTrue(typo.audienceUnknown());
     }
+
+    @Test
+    void bareOffIsOffWithoutAWarning() throws Exception {
+        // YAML 1.1 reads a bare off as false; the plugin must still treat it as the off mode, not as a typo.
+        for (String v : new String[] {"off", "\"off\"", "OFF", "false"}) {
+            var share = HudConfig.from(withJarDefaults("share:\n  audience: " + v + "\n")).share();
+            assertEquals(HudConfig.ShareAudience.OFF, share.audience(), v);
+            assertFalse(share.audienceUnknown(), v);
+        }
+        var on = HudConfig.from(withJarDefaults("share:\n  audience: on\n")).share();
+        assertEquals(HudConfig.ShareAudience.OFF, on.audience(), "on isn't a mode, so it fails closed");
+        assertTrue(on.audienceUnknown());
+    }
+
+    @Test
+    void serverWithOldDefaultsAndAllOnlineBecomesMayor() throws Exception {
+        // A live server's 0.3.0 file: enabled, all-online, require-mayor left at its old default (true).
+        var c = withJarDefaults("share:\n  enabled: true\n  candidates: all-online\n  cooldown-seconds: 30\n  log: true\n");
+        assertEquals(HudConfig.ShareAudience.MAYOR, HudConfig.from(c).share().audience());
+    }
 }

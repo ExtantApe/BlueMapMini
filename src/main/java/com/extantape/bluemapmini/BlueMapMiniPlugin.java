@@ -106,6 +106,7 @@ public final class BlueMapMiniPlugin extends JavaPlugin implements Listener {
     public void reload() {
         reloadConfig();
         config = HudConfig.from(getConfig());
+        logShareAudience();
         boolean changed = rebuildPack();
         stopRendering();
         BlueMapAPI.getInstance().ifPresent(this::startRendering);
@@ -264,6 +265,11 @@ public final class BlueMapMiniPlugin extends JavaPlugin implements Listener {
     /** Once every plugin has started, says who coordinates can be shared with, and warns about a bad setting. */
     @EventHandler
     public void onServerLoad(ServerLoadEvent event) {
+        logShareAudience();
+    }
+
+    /** Says who coordinates can be shared with, and warns about a bad setting. Also run after a reload. */
+    private void logShareAudience() {
         var share = config.share();
         if (share.audienceUnknown()) getLogger().warning("share.audience isn't one of off, mayor, mayor-world-group, world, world-group or server, so sharing is off.");
         getLogger().info("Coordinate sharing: " + switch (share.audience()) {

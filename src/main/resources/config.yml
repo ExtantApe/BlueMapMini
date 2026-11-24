@@ -139,7 +139,7 @@ share:
   # Any plugin that listens to the share event can still narrow a share. Players who turned shares off
   # (/hud hide shares) or lack bluemapmini.share.receive are never offered. An unknown value counts as off.
   # A Mayor older than 0.5.0 turns sharing off in every mode.
-  audience: off
+  audience: "off"
   # Seconds a player waits between shares, so it can't be used to spam.
   cooldown-seconds: 30
   # Log each share to the console: who sent it, where, and who received it.

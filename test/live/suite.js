@@ -19,7 +19,7 @@ const liveBots = []; // Quit after each group, so a crash can't leave a duplicat
 function baseConfig(edits = {}) {
   fs.copyFileSync(path.join(REPO, 'src/main/resources/config.yml'), CFG);
   // These servers have no Mayor, so sharing is turned on without it; the check below covers the default.
-  editYaml(CFG, { 'pack.port': packPort, 'pack.bind': '127.0.0.1', 'tiles.http-url': `http://127.0.0.1:${webPort}`, 'hud.clock.enabled': false, 'share.require-mayor': false, ...edits });
+  editYaml(CFG, { 'pack.port': packPort, 'pack.bind': '127.0.0.1', 'tiles.http-url': `http://127.0.0.1:${webPort}`, 'hud.clock.enabled': false, 'share.audience': 'world-group', ...edits });
 }
 async function reload(expectPush) {
   const m = s.mark(); s.cmd('bluemapmini reload');
@@ -209,26 +209,30 @@ const GROUPS = {
     check('A rules plugin can stop a share', /weren't sent/.test(cancelled || '') && got(m).length === 0, cancelled);
     await s.run('bmt sharefilter off', /BMT sharefilter/);
 
-    baseConfig({ 'share.cooldown-seconds': 0, 'share.candidates': 'all-online' }); await reload();
+    baseConfig({ 'share.cooldown-seconds': 0 }); await reload();
     m = marks();
     const fallback = await chat(t, '/hud share Drew', /can receive|Sent/);
-    check('all-online with nothing filtering stays in the world group', /Nobody you picked/.test(fallback || '') && got(m).length === 0, fallback);
-    await s.run('bmt sharefilter log', /BMT sharefilter/);
+    check('world-group leaves out a player in another world', /Nobody you picked/.test(fallback || '') && got(m).length === 0, fallback);
+    baseConfig({ 'share.cooldown-seconds': 0, 'share.audience': 'server' }); await reload();
     m = marks();
     sent = await chat(t, '/hud share Drew', /can receive|Sent/); await sleep(500);
-    check('all-online with a filter reaches other worlds', /to 1 player: Drew/.test(sent || '') && got(m).includes('Drew'), sent);
-    await s.run('bmt sharefilter off', /BMT sharefilter/);
+    check('server reaches a player in another world', /to 1 player: Drew/.test(sent || '') && got(m).includes('Drew'), sent);
 
     baseConfig({ 'share.cooldown-seconds': 30 }); await reload();
     await chat(t, '/hud share Alex', /Sent/);
     const wait = await chat(t, '/hud share Alex', /share again|Sent/);
     check('A cooldown stops repeated shares', /You can share again in (2\d|30) seconds/.test(wait || ''), wait); // A busy machine slows the round trip.
-    baseConfig({ 'share.cooldown-seconds': 0, 'share.enabled': false }); await reload();
+    baseConfig({ 'share.cooldown-seconds': 0, 'share.audience': 'off' }); await reload();
+    let mk = s.mark();
     const disabled = await chat(t, '/hud share Alex', /turned off|Sent/);
-    check('share.enabled: false turns it off', /turned off on this server/.test(disabled || ''), disabled);
-    baseConfig({ 'share.cooldown-seconds': 0, 'share.require-mayor': true }); await reload();
+    check('audience: off turns it off', /turned off on this server/.test(disabled || ''), disabled);
+    check('audience: off gives no typo warning', !/isn't one of/.test(s.since(mk)));
+    baseConfig({ 'share.cooldown-seconds': 0, 'share.audience': 'everybody' }); mk = s.mark(); await reload();
+    const typo = await chat(t, '/hud share Alex', /turned off|Sent/);
+    check('An unknown audience fails closed, with a warning', /turned off on this server/.test(typo || '') && /isn't one of/.test(s.since(mk)), typo);
+    baseConfig({ 'share.cooldown-seconds': 0, 'share.audience': 'mayor' }); await reload();
     const noMayor = await chat(t, '/hud share Alex', /off on this server|Sent/);
-    check('By default, with no Mayor installed, sharing stays off (fail closed)', /off on this server for now/.test(noMayor || ''), noMayor);
+    check('audience: mayor with no Mayor installed stays off (fail closed)', /off on this server for now/.test(noMayor || ''), noMayor);
 
     baseConfig({ 'share.cooldown-seconds': 0 }); await reload();
     const dialogs = [];
@@ -1194,7 +1198,7 @@ const GROUPS = {
     const m = s.mark();
     try { await GROUPS[n](); } catch (e) { check(`Group ${n} finished`, false, e.stack?.slice(0, 400)); }
     for (const bot of liveBots.splice(0)) if (bot.ended === null) await bot.cleanQuit();
-    const hudErrors = s.errors(m).filter((l) => /extantape|\[BlueMapMini\]/.test(l) && !/icons must be|Ignoring|no resource pack|doesn't contain|Could not download pack.public-url \(http:\/\/127.0.0.1:\d+\/custom.zip\)|no theme called sparkles|Theme broken couldn't be loaded|Theme ocean is hard to read|FailDl didn't get the BlueMapMini pack/.test(l));
+    const hudErrors = s.errors(m).filter((l) => /extantape|\[BlueMapMini\]/.test(l) && !/icons must be|Ignoring|no resource pack|doesn't contain|Could not download pack.public-url \(http:\/\/127.0.0.1:\d+\/custom.zip\)|no theme called sparkles|Theme broken couldn't be loaded|Theme ocean is hard to read|FailDl didn't get the BlueMapMini pack|Coordinate sharing is off: share\.audience follows Mayor|share\.audience isn't one of/.test(l));
     check(`No BlueMapMini errors during ${n}`, hudErrors.length === 0, hudErrors[0]?.slice(0, 200) || '');
     const drops = s.since(m).split('\n').filter((l) => /lost connection: (?!Disconnected|This server needs|.*resource pack)/.test(l));
     check(`No unexpected disconnects during ${n}`, drops.length === 0, drops[0]?.slice(0, 160) || '');
