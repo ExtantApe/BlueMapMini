@@ -24,11 +24,6 @@ class ShareConfigTest {
         assertEquals(HudConfig.ShareAudience.OFF, HudConfig.from(withJarDefaults("")).share().audience());
     }
 
-    @Test
-    void olderFileWithRequirePosseBecomesPosseWithinTheWorldGroup() throws Exception {
-        var c = withJarDefaults("share:\n  enabled: true\n  candidates: world-group\n  require-mayor: true\n");
-        assertEquals(HudConfig.ShareAudience.POSSE_WORLD_GROUP, HudConfig.from(c).share().audience());
-    }
 
     @Test
     void explicitAudienceIsRead() throws Exception {
@@ -52,9 +47,9 @@ class ShareConfigTest {
     }
 
     @Test
-    void serverWithOldDefaultsAndAllOnlineBecomesPosse() throws Exception {
-        // A live server's 0.3.0 file: enabled, all-online, require-mayor left at its old default (true).
-        var c = withJarDefaults("share:\n  enabled: true\n  candidates: all-online\n  cooldown-seconds: 30\n  log: true\n");
-        assertEquals(HudConfig.ShareAudience.POSSE, HudConfig.from(c).share().audience());
+    void olderShareKeysAloneMeanOff() throws Exception {
+        // D196, D295: no old key is read. A file with only the pre-0.4.0 keys has no share.audience, so sharing is off.
+        var c = withJarDefaults("share:\n  enabled: true\n  candidates: all-online\n  require-mayor: true\n  cooldown-seconds: 30\n");
+        assertEquals(HudConfig.ShareAudience.OFF, HudConfig.from(c).share().audience());
     }
 }

@@ -19,8 +19,8 @@ class PosseGuardTest {
         // D196: the old values are unknown, and an unknown value is off, so sharing stays off until the config is edited.
         assertNull(ShareAudience.of("mayor"));
         assertNull(ShareAudience.of("mayor-world-group"));
-        assertEquals(ShareAudience.OFF, ShareAudience.resolve("mayor", true, true, "all-online"));
-        assertEquals(ShareAudience.OFF, ShareAudience.resolve("mayor-world-group", null, null, null));
+        assertEquals(ShareAudience.OFF, ShareAudience.resolve("mayor"));
+        assertEquals(ShareAudience.OFF, ShareAudience.resolve("mayor-world-group"));
         assertEquals(ShareAudience.POSSE, ShareAudience.of("posse"));
         assertEquals(ShareAudience.POSSE_WORLD_GROUP, ShareAudience.of("posse-world-group"));
     }
@@ -86,35 +86,11 @@ class PosseGuardTest {
 
     @Test
     void defaultsAndTyposAreOff() {
-        assertEquals(ShareAudience.OFF, ShareAudience.resolve(null, null, null, null), "nothing set: off");
-        assertEquals(ShareAudience.OFF, ShareAudience.resolve("everyone", null, null, null), "unknown value: off");
-        assertEquals(ShareAudience.SERVER, ShareAudience.resolve(" Server ", null, null, null));
+        assertEquals(ShareAudience.OFF, ShareAudience.resolve(null), "nothing set: off");
+        assertEquals(ShareAudience.OFF, ShareAudience.resolve("everyone"), "unknown value: off");
+        assertEquals(ShareAudience.SERVER, ShareAudience.resolve(" Server "));
     }
 
-    @Test
-    void olderConfigsKeepWhatTheyHad() {
-        assertEquals(ShareAudience.OFF, ShareAudience.resolve(null, false, true, "world-group"));
-        assertEquals(ShareAudience.POSSE_WORLD_GROUP, ShareAudience.resolve(null, true, null, "world-group"), "old defaults: Posse AND world group");
-        assertEquals(ShareAudience.POSSE_WORLD_GROUP, ShareAudience.resolve(null, null, null, "world-group"));
-        assertEquals(ShareAudience.POSSE, ShareAudience.resolve(null, true, true, "all-online"));
-        assertEquals(ShareAudience.WORLD_GROUP, ShareAudience.resolve(null, true, false, "world-group"));
-        assertEquals(ShareAudience.WORLD_GROUP, ShareAudience.resolve(null, true, false, "all-online"), "all-online without a filter stayed in the world group");
-    }
 
-    @Test
-    void migrationNeverOffersMoreThanTheOldSettingsDid() {
-        // Old reach: world group always, all-online only through Posse. Check who's offered, kid in kids to adult in survival.
-        String[][] old = {{"true", "world-group"}, {"true", "all-online"}, {"false", "world-group"}, {"false", "all-online"}};
-        for (String[] o : old) {
-            ShareAudience a = ShareAudience.resolve(null, true, Boolean.parseBoolean(o[0]), o[1]);
-            boolean crossWorldBefore = o[0].equals("true") && o[1].equals("all-online");
-            assertEquals(crossWorldBefore, ShareService.offered(a, "kids", "survival"), String.join(",", o) + " -> " + a.key);
-            assertTrue(ShareService.offered(a, "kids", "kids_nether"), "the world group was always offered");
-        }
-    }
 
-    @Test
-    void newSettingWinsOverOldKeys() {
-        assertEquals(ShareAudience.WORLD, ShareAudience.resolve("world", true, true, "all-online"));
-    }
 }

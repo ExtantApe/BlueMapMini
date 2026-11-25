@@ -17,6 +17,11 @@ dependencies:
       load: BEFORE
       required: false
       join-classpath: true
+    # Optional. Its chat rules decide who may receive a share when share.audience is posse or posse-world-group.
+    Posse:
+      load: BEFORE
+      required: false
+      join-classpath: false
 permissions:
   bluemapmini.use:
     description: See and control the minimap.

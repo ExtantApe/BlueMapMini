@@ -4,7 +4,7 @@ BlueMapMini: a BlueMap minimap and coordinates HUD for Paper, rendered in game f
 
 It's an unofficial add-on for BlueMap and isn't affiliated with BlueMap's authors.
 
-**Status:** pre-release, version 0.5.0, for Posse 0.11.0 (formerly Mayor; the old name is no longer recognized). 0.5.0 passed the full live suite and the real-Posse test (8 checks) on throwaway Paper 26.1.2 and 26.2 (337 checks each, the client font check skipped) and 26.3 (335, run before two checks for the old audience values were added), 2026-11-25. 0.3.0 passed a full test suite on live Paper 26.1.2, 26.2 and 26.3 servers with real BlueMap tiles, using a protocol bot. 0.4.1 (the share audience setting) passed it again on 26.3 only, 334 of 335 with the client font check skipped, plus the real Posse test. It hasn't been seen in a real game client yet. See [Testing](#testing).
+**Status:** pre-release, version 0.5.0, for Posse 0.11.0. 0.5.0 passed the full live suite and the real-Posse test (8 checks) on throwaway Paper 26.3 (337 checks, the client font check skipped), 2026-11-25, and on 26.1.2 and 26.2 (337 each) just before the old share keys were dropped; the config change is covered by unit tests there. 0.3.0 passed a full test suite on live Paper 26.1.2, 26.2 and 26.3 servers with real BlueMap tiles, using a protocol bot. 0.4.1 (the share audience setting) passed it again on 26.3 only, 334 of 335 with the client font check skipped, plus the real Posse test. It hasn't been seen in a real game client yet. See [Testing](#testing).
 
 - Requires Paper 26.1 or newer, Java 25, and a BlueMap version that matches your server (see below). Java Edition only. Paper 1.21.11 and older aren't supported.
 - Works alongside other resource packs, because it never overrides a shader and only adds its own files.
@@ -98,7 +98,7 @@ Up to 8 themes fit in the pack. Every built-in theme passes the same readability
   - `world-group`: players in the same world, counting its `_nether` and `_the_end` as the same world.
   - `server`: anyone online.
 
-  In every mode a receiver must be able to see the sender, have `bluemapmini.share.receive`, and not have turned shares off with `/hud hide shares`. An unknown value counts as `off`. A Posse older than 0.11.0 turns sharing off in every mode. A config from before 0.4.0 gets the narrowest mode matching its old `enabled`, `candidates` and `require-mayor` keys (Posse's former name, read only for this upgrade), so an upgrade never widens sharing: the old defaults become `posse-world-group`.
+  In every mode a receiver must be able to see the sender, have `bluemapmini.share.receive`, and not have turned shares off with `/hud hide shares`. An unknown value counts as `off`. A Posse older than 0.11.0 turns sharing off in every mode. A config with no `share.audience` is `off`; the older `enabled`, `candidates` and `require-*` keys aren't read.
 - **Feedback:** the sender is told exactly who got their coordinates, and who couldn't.
 - **Limits:** a player waits `share.cooldown-seconds` (30 by default) between shares, and each share is logged to the console.
 
