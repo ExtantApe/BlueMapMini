@@ -18,7 +18,7 @@ const liveBots = []; // Quit after each group, so a crash can't leave a duplicat
 /** The shipped config with this server's ports. The clock is off unless a group turns it on, so idle tests stay idle. */
 function baseConfig(edits = {}) {
   fs.copyFileSync(path.join(REPO, 'src/main/resources/config.yml'), CFG);
-  // These servers have no Mayor, so sharing is turned on without it; the check below covers the default.
+  // These servers have no Posse, so sharing is turned on without it; the check below covers the default.
   editYaml(CFG, { 'pack.port': packPort, 'pack.bind': '127.0.0.1', 'tiles.http-url': `http://127.0.0.1:${webPort}`, 'hud.clock.enabled': false, 'share.audience': 'world-group', ...edits });
 }
 async function reload(expectPush) {
@@ -230,9 +230,14 @@ const GROUPS = {
     baseConfig({ 'share.cooldown-seconds': 0, 'share.audience': 'everybody' }); mk = s.mark(); await reload();
     const typo = await chat(t, '/hud share Alex', /turned off|Sent/);
     check('An unknown audience fails closed, with a warning', /turned off on this server/.test(typo || '') && /isn't one of/.test(s.since(mk)), typo);
-    baseConfig({ 'share.cooldown-seconds': 0, 'share.audience': 'mayor' }); await reload();
-    const noMayor = await chat(t, '/hud share Alex', /off on this server|Sent/);
-    check('audience: mayor with no Mayor installed stays off (fail closed)', /off on this server for now/.test(noMayor || ''), noMayor);
+    for (const old of ['mayor', 'mayor-world-group']) { // D196: the old names are unknown values now, so sharing is off
+      baseConfig({ 'share.cooldown-seconds': 0, 'share.audience': old }); mk = s.mark(); await reload();
+      const gone = await chat(t, '/hud share Alex', /turned off|Sent/);
+      check(`The old audience "${old}" is unknown: sharing stays off, with a warning`, /turned off on this server/.test(gone || '') && /isn't one of/.test(s.since(mk)), gone);
+    }
+    baseConfig({ 'share.cooldown-seconds': 0, 'share.audience': 'posse' }); await reload();
+    const noPosse = await chat(t, '/hud share Alex', /off on this server|Sent/);
+    check('audience: posse with no Posse installed stays off (fail closed)', /off on this server for now/.test(noPosse || ''), noPosse);
 
     baseConfig({ 'share.cooldown-seconds': 0 }); await reload();
     const dialogs = [];
@@ -1198,7 +1203,7 @@ const GROUPS = {
     const m = s.mark();
     try { await GROUPS[n](); } catch (e) { check(`Group ${n} finished`, false, e.stack?.slice(0, 400)); }
     for (const bot of liveBots.splice(0)) if (bot.ended === null) await bot.cleanQuit();
-    const hudErrors = s.errors(m).filter((l) => /extantape|\[BlueMapMini\]/.test(l) && !/icons must be|Ignoring|no resource pack|doesn't contain|Could not download pack.public-url \(http:\/\/127.0.0.1:\d+\/custom.zip\)|no theme called sparkles|Theme broken couldn't be loaded|Theme ocean is hard to read|FailDl didn't get the BlueMapMini pack|Coordinate sharing is off: share\.audience follows Mayor|share\.audience isn't one of/.test(l));
+    const hudErrors = s.errors(m).filter((l) => /extantape|\[BlueMapMini\]/.test(l) && !/icons must be|Ignoring|no resource pack|doesn't contain|Could not download pack.public-url \(http:\/\/127.0.0.1:\d+\/custom.zip\)|no theme called sparkles|Theme broken couldn't be loaded|Theme ocean is hard to read|FailDl didn't get the BlueMapMini pack|Coordinate sharing is off: share\.audience follows Posse|share\.audience isn't one of/.test(l));
     check(`No BlueMapMini errors during ${n}`, hudErrors.length === 0, hudErrors[0]?.slice(0, 200) || '');
     const drops = s.since(m).split('\n').filter((l) => /lost connection: (?!Disconnected|This server needs|.*resource pack)/.test(l));
     check(`No unexpected disconnects during ${n}`, drops.length === 0, drops[0]?.slice(0, 160) || '');

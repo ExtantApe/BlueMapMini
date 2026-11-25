@@ -8,7 +8,7 @@ These run BlueMapMini on a real Paper server with real BlueMap tiles, and drive 
 
 - **Real:** Paper, BlueMap, the plugin jar, the generated pack, BlueMap's tiles and SQL storage.
 - **A bot, not the game:** the client is [mineflayer](https://github.com/PrismarineJS/mineflayer), which speaks the 1.21.11 protocol, so it joins 26.x through ViaVersion and ViaBackwards. It doesn't draw anything. Frames are decoded with a model of the client's font rules.
-- **Real Mayor** in the `mayor` test only.
+- **Real Posse** in the `posse` test only.
 - **Simulated:** the helper plugin acts like other plugins: vanish, boss bars, permissions, POI markers, a pack sent with the old one-pack method the way Magic does it, and a chat rules plugin that filters `CoordinateShareEvent`. The pack host for `public-url` is a local stand-in.
 - **Not covered:** pressing the buttons in the `/hud share` dialog. The bot checks the dialog it's sent, but its protocol library has no packet for clicking one. The buttons run Paper's own callbacks into the same code `/hud share <names>` and `/hud share everyone` test.
 - **Optional:** the font check runs the real Minecraft client's font code on the pack, if you give it a client classpath (see below). It's skipped otherwise, and the summary says so.
@@ -51,7 +51,7 @@ BMM_ACCEPT_EULA=1 test/live/run.sh 26.1.2 suite:coordsonly,onebar
 | `packurl` | `public-url` with `{sha1}`, the hosted-pack check, and `/bluemapmini pack export`. | 3 min |
 | `storage` | BlueMap starting 8 times next to the plugin, and BlueMap on SQLite read through the HTTP source. | 6 min |
 | `backoff` | Another plugin owning `/map` and `/hud`, and getting them back once it's removed. | 2 min |
-| `mayor` | The real Mayor with BlueMapMini: shares stay inside chat circles with Mayor 0.5; without Mayor, sharing stays off by default and works with `share.require-mayor: false`. Needs `BMM_MAYOR_JAR`. |
+| `posse` | The real Posse with BlueMapMini: shares stay inside chat circles with Posse 0.11.0; without Posse, sharing stays off with `share.audience: posse`, and works with `share.audience: server`. Needs `BMM_POSSE_JAR`. |
 
 Logs go to `test/live/work/server-<version>-<test>.log`. Each test prints a summary, with any failures and skipped checks.
 

@@ -25,9 +25,9 @@ class ShareConfigTest {
     }
 
     @Test
-    void olderFileWithRequireMayorBecomesMayorWithinTheWorldGroup() throws Exception {
+    void olderFileWithRequirePosseBecomesPosseWithinTheWorldGroup() throws Exception {
         var c = withJarDefaults("share:\n  enabled: true\n  candidates: world-group\n  require-mayor: true\n");
-        assertEquals(HudConfig.ShareAudience.MAYOR_WORLD_GROUP, HudConfig.from(c).share().audience());
+        assertEquals(HudConfig.ShareAudience.POSSE_WORLD_GROUP, HudConfig.from(c).share().audience());
     }
 
     @Test
@@ -52,9 +52,9 @@ class ShareConfigTest {
     }
 
     @Test
-    void serverWithOldDefaultsAndAllOnlineBecomesMayor() throws Exception {
+    void serverWithOldDefaultsAndAllOnlineBecomesPosse() throws Exception {
         // A live server's 0.3.0 file: enabled, all-online, require-mayor left at its old default (true).
         var c = withJarDefaults("share:\n  enabled: true\n  candidates: all-online\n  cooldown-seconds: 30\n  log: true\n");
-        assertEquals(HudConfig.ShareAudience.MAYOR, HudConfig.from(c).share().audience());
+        assertEquals(HudConfig.ShareAudience.POSSE, HudConfig.from(c).share().audience());
     }
 }

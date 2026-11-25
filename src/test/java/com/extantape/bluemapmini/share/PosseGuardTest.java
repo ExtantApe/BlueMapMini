@@ -5,41 +5,57 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/** D254: who coordinates can be shared with, per share.audience, and Mayor's mode failing closed. */
-class MayorGuardTest {
+/** D254: who coordinates can be shared with, per share.audience, and Posse's mode failing closed. */
+class PosseGuardTest {
     @Test
-    void mayorModeIsOffWithoutMayorOrWithOneOlderThan05() {
-        assertNotNull(ShareService.mayorGuard(ShareAudience.MAYOR, null), "no Mayor: fail closed");
-        assertNotNull(ShareService.mayorGuard(ShareAudience.MAYOR, "0.4.0"), "0.4.x hooks a share event BlueMapMini no longer sends");
-        assertNotNull(ShareService.mayorGuard(ShareAudience.MAYOR, "something odd"), "an unreadable version fails closed");
+    void posseModeIsOffWithoutPosseOrWithOneOlderThan011() {
+        assertNotNull(ShareService.posseGuard(ShareAudience.POSSE, null), "no Posse: fail closed");
+        assertNotNull(ShareService.posseGuard(ShareAudience.POSSE, "0.4.0"), "0.4.x hooks a share event BlueMapMini no longer sends");
+        assertNotNull(ShareService.posseGuard(ShareAudience.POSSE, "something odd"), "an unreadable version fails closed");
     }
 
     @Test
-    void mayorModeIsOnWithMayor05OrNewer() {
-        assertNull(ShareService.mayorGuard(ShareAudience.MAYOR, "0.5.0"));
-        assertNull(ShareService.mayorGuard(ShareAudience.MAYOR, "0.7.0-SNAPSHOT"));
-        assertNull(ShareService.mayorGuard(ShareAudience.MAYOR, "1.0.0"));
+    void theOldMayorNameIsNotAnAudience() {
+        // D196: the old values are unknown, and an unknown value is off, so sharing stays off until the config is edited.
+        assertNull(ShareAudience.of("mayor"));
+        assertNull(ShareAudience.of("mayor-world-group"));
+        assertEquals(ShareAudience.OFF, ShareAudience.resolve("mayor", true, true, "all-online"));
+        assertEquals(ShareAudience.OFF, ShareAudience.resolve("mayor-world-group", null, null, null));
+        assertEquals(ShareAudience.POSSE, ShareAudience.of("posse"));
+        assertEquals(ShareAudience.POSSE_WORLD_GROUP, ShareAudience.of("posse-world-group"));
     }
 
     @Test
-    void mayorWorldGroupFailsClosedLikeMayor() {
-        assertNotNull(ShareService.mayorGuard(ShareAudience.MAYOR_WORLD_GROUP, null));
-        assertNull(ShareService.mayorGuard(ShareAudience.MAYOR_WORLD_GROUP, "0.7.0"));
-        assertTrue(ShareService.offered(ShareAudience.MAYOR_WORLD_GROUP, "survival", "survival_nether"));
-        assertFalse(ShareService.offered(ShareAudience.MAYOR_WORLD_GROUP, "kids", "survival"));
+    void aPosseOlderThanItsFirstReleaseUnderThatNameStaysOff() {
+        assertNotNull(ShareService.posseGuard(ShareAudience.POSSE, "0.10.0"));
     }
 
     @Test
-    void anOldMayorTurnsEveryModeOff() {
+    void posseModeIsOnWithPosse011OrNewer() {
+        assertNull(ShareService.posseGuard(ShareAudience.POSSE, "0.11.0"));
+        assertNull(ShareService.posseGuard(ShareAudience.POSSE, "0.12.0-SNAPSHOT"));
+        assertNull(ShareService.posseGuard(ShareAudience.POSSE, "1.0.0"));
+    }
+
+    @Test
+    void posseWorldGroupFailsClosedLikePosse() {
+        assertNotNull(ShareService.posseGuard(ShareAudience.POSSE_WORLD_GROUP, null));
+        assertNull(ShareService.posseGuard(ShareAudience.POSSE_WORLD_GROUP, "0.11.0"));
+        assertTrue(ShareService.offered(ShareAudience.POSSE_WORLD_GROUP, "survival", "survival_nether"));
+        assertFalse(ShareService.offered(ShareAudience.POSSE_WORLD_GROUP, "kids", "survival"));
+    }
+
+    @Test
+    void anOldPosseTurnsEveryModeOff() {
         for (ShareAudience a : new ShareAudience[] {ShareAudience.WORLD, ShareAudience.WORLD_GROUP, ShareAudience.SERVER}) {
-            assertNotNull(ShareService.mayorGuard(a, "0.4.0"), a.key);
+            assertNotNull(ShareService.posseGuard(a, "0.4.0"), a.key);
         }
     }
 
     @Test
-    void otherModesDoNotNeedMayor() {
+    void otherModesDoNotNeedPosse() {
         for (ShareAudience a : new ShareAudience[] {ShareAudience.WORLD, ShareAudience.WORLD_GROUP, ShareAudience.SERVER}) {
-            assertNull(ShareService.mayorGuard(a, null), a.key);
+            assertNull(ShareService.posseGuard(a, null), a.key);
         }
     }
 
@@ -63,9 +79,9 @@ class MayorGuardTest {
     }
 
     @Test
-    void serverAndMayorOfferEveryoneAndMayorNarrowsLater() {
+    void serverAndPosseOfferEveryoneAndPosseNarrowsLater() {
         assertTrue(ShareService.offered(ShareAudience.SERVER, "kids", "survival"));
-        assertTrue(ShareService.offered(ShareAudience.MAYOR, "kids", "survival"));
+        assertTrue(ShareService.offered(ShareAudience.POSSE, "kids", "survival"));
     }
 
     @Test
@@ -78,16 +94,16 @@ class MayorGuardTest {
     @Test
     void olderConfigsKeepWhatTheyHad() {
         assertEquals(ShareAudience.OFF, ShareAudience.resolve(null, false, true, "world-group"));
-        assertEquals(ShareAudience.MAYOR_WORLD_GROUP, ShareAudience.resolve(null, true, null, "world-group"), "old defaults: Mayor AND world group");
-        assertEquals(ShareAudience.MAYOR_WORLD_GROUP, ShareAudience.resolve(null, null, null, "world-group"));
-        assertEquals(ShareAudience.MAYOR, ShareAudience.resolve(null, true, true, "all-online"));
+        assertEquals(ShareAudience.POSSE_WORLD_GROUP, ShareAudience.resolve(null, true, null, "world-group"), "old defaults: Posse AND world group");
+        assertEquals(ShareAudience.POSSE_WORLD_GROUP, ShareAudience.resolve(null, null, null, "world-group"));
+        assertEquals(ShareAudience.POSSE, ShareAudience.resolve(null, true, true, "all-online"));
         assertEquals(ShareAudience.WORLD_GROUP, ShareAudience.resolve(null, true, false, "world-group"));
         assertEquals(ShareAudience.WORLD_GROUP, ShareAudience.resolve(null, true, false, "all-online"), "all-online without a filter stayed in the world group");
     }
 
     @Test
     void migrationNeverOffersMoreThanTheOldSettingsDid() {
-        // Old reach: world group always, all-online only through Mayor. Check who's offered, kid in kids to adult in survival.
+        // Old reach: world group always, all-online only through Posse. Check who's offered, kid in kids to adult in survival.
         String[][] old = {{"true", "world-group"}, {"true", "all-online"}, {"false", "world-group"}, {"false", "all-online"}};
         for (String[] o : old) {
             ShareAudience a = ShareAudience.resolve(null, true, Boolean.parseBoolean(o[0]), o[1]);

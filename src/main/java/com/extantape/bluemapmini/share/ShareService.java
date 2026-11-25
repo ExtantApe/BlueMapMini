@@ -52,14 +52,14 @@ public final class ShareService {
 
     /**
      * Whether a player in {@code otherWorld} can be offered a share from {@code senderWorld} under this audience
-     * (D254). Mayor's mode offers everyone and leaves narrowing to Mayor through the share event; off offers nobody.
+     * (D254). Posse's mode offers everyone and leaves narrowing to Posse through the share event; off offers nobody.
      */
     static boolean offered(HudConfig.ShareAudience audience, String senderWorld, String otherWorld) {
         return switch (audience) {
             case OFF -> false;
             case WORLD -> senderWorld.equals(otherWorld);
-            case WORLD_GROUP, MAYOR_WORLD_GROUP -> worldGroup(senderWorld).equals(worldGroup(otherWorld));
-            case MAYOR, SERVER -> true;
+            case WORLD_GROUP, POSSE_WORLD_GROUP -> worldGroup(senderWorld).equals(worldGroup(otherWorld));
+            case POSSE, SERVER -> true;
         };
     }
 
@@ -90,7 +90,7 @@ public final class ShareService {
     public String blocked(Player sender) {
         if (config().audience() == HudConfig.ShareAudience.OFF) return "Sharing coordinates is turned off on this server.";
         if (!com.extantape.bluemapmini.Perms.has(sender, SEND)) return "You can't share your coordinates here.";
-        String guard = olderMayor();
+        String guard = olderPosse();
         if (guard != null) {
             plugin.getLogger().warning(guard);
             return "Sharing coordinates is off on this server for now. An admin has been told why.";
@@ -188,28 +188,28 @@ public final class ShareService {
     }
 
     /**
-     * In Mayor's modes, shares follow Mayor's player groups, so they're off (fail closed) unless Mayor 0.5.0 or newer
-     * is running. In every mode, a Mayor older than 0.5.0 turns sharing off, because it listens for a share event
-     * BlueMapMini doesn't send and would let shares skip its groups. The version is null when Mayor isn't running.
+     * In Posse's modes, shares follow Posse's player groups, so they're off (fail closed) unless Posse 0.11.0 or newer
+     * is running. In every mode, a Posse older than 0.11.0 turns sharing off, because it listens for a share event
+     * BlueMapMini doesn't send and would let shares skip its groups. The version is null when Posse isn't running.
      * Returns why sharing is off, or null.
      */
-    static String mayorGuard(HudConfig.ShareAudience audience, String version) {
-        boolean needsMayor = audience == HudConfig.ShareAudience.MAYOR || audience == HudConfig.ShareAudience.MAYOR_WORLD_GROUP;
-        if (version == null && !needsMayor) return null;
-        if (version == null) return "Coordinate sharing is off: share.audience follows Mayor's player groups, and Mayor isn't running. Install Mayor 0.5.0 or newer, or pick another share.audience.";
+    static String posseGuard(HudConfig.ShareAudience audience, String version) {
+        boolean needsPosse = audience == HudConfig.ShareAudience.POSSE || audience == HudConfig.ShareAudience.POSSE_WORLD_GROUP;
+        if (version == null && !needsPosse) return null;
+        if (version == null) return "Coordinate sharing is off: share.audience follows Posse's player groups, and Posse isn't running. Install Posse 0.11.0 or newer, or pick another share.audience.";
         String[] p = version.split("[.-]");
         try {
             int major = Integer.parseInt(p[0]), minor = p.length > 1 ? Integer.parseInt(p[1]) : 0;
-            if (major > 0 || minor >= 5) return null;
+            if (major > 0 || minor >= 11) return null;
         } catch (NumberFormatException e) {
             // Unreadable version: treat it as too old.
         }
-        return "Coordinate sharing is off because Mayor " + version + " can't see BlueMapMini's shares, so they'd skip its player groups. Update Mayor to 0.5.0 or newer.";
+        return "Coordinate sharing is off because Posse " + version + " can't see BlueMapMini's shares, so they'd skip its player groups. Update Posse to 0.11.0 or newer.";
     }
 
-    private String olderMayor() {
-        org.bukkit.plugin.Plugin mayor = plugin.getServer().getPluginManager().getPlugin("Mayor");
-        boolean on = mayor != null && mayor.isEnabled();
-        return mayorGuard(config().audience(), on ? mayor.getPluginMeta().getVersion() : null);
+    private String olderPosse() {
+        org.bukkit.plugin.Plugin posse = plugin.getServer().getPluginManager().getPlugin("Posse");
+        boolean on = posse != null && posse.isEnabled();
+        return posseGuard(config().audience(), on ? posse.getPluginMeta().getVersion() : null);
     }
 }

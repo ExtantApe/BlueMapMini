@@ -13,7 +13,7 @@ import java.util.Set;
  * server's chat rules, can decide who may receive them. Remove recipients to narrow the share, or cancel it
  * to send nothing. Players who turned shares off, or lack {@code bluemapmini.share.receive}, are already gone.
  *
- * <p>In the {@code mayor} and {@code server} modes of {@code share.audience}, the recipients start as everyone
+ * <p>In the {@code posse} and {@code server} modes of {@code share.audience}, the recipients start as everyone
  * online, including players in other worlds.
  */
 public final class CoordinateShareEvent extends Event implements Cancellable {
