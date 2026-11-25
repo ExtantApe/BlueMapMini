@@ -2,6 +2,17 @@
 
 Kept by this repo's owning session (Minecraft: Plugins Lead), per `~/Code/CLAUDE.md`, "Test self-audits". Newest first.
 
+## 2026-11-25: Posse rename (0.5.0)
+
+| Promise | Covered by |
+| --- | --- |
+| `posse` and `posse-world-group` read; the old `mayor` values are unknown, so sharing is off | unit `PosseGuardTest.theOldMayorNameIsNotAnAudience`; live "The old audience ... is unknown" (26.1.2 and 26.2) |
+| Posse modes fail closed with no Posse or one older than 0.11.0 | unit `PosseGuardTest`; live "audience: posse with no Posse installed stays off" |
+| No old key is read: only the old keys means off | unit `ShareConfigTest.olderShareKeysAloneMeanOff` |
+| Shares follow Posse's circles | live `posse.js` (8 checks, real Posse 0.11.0), on 26.1.2, 26.2 and 26.3 |
+
+Gaps skipped: 26.1.2 and 26.2 weren't rerun after the old share keys were dropped; unit tests cover that parse, and 26.3 reran with the final code.
+
 ## 2026-11-24: share.audience (0.4.1)
 
 | Promise | Covered by |

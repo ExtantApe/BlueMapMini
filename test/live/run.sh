@@ -95,10 +95,10 @@ for test in "${TESTS[@]}"; do
     packurl) node packurl.js "$VERSION" "$NAME" "$PAPER" "$PORT" "$PACK_PORT" "$WEB_PORT" "$HOST_PORT" > "$log" 2>&1 || status=1 ;;
     storage) node storage.js "$NAME" "$PAPER" "$PORT" "$WEB_PORT" "$PACK_PORT" > "$log" 2>&1 || status=1 ;;
     backoff) node backoff.js "$NAME" "$PAPER" "$PORT" "$CONFLICT_JAR" > "$log" 2>&1 || status=1 ;;
-    mayor) # The real Mayor: BMM_MAYOR_JAR.
-      if [ -f "${BMM_MAYOR_JAR:-}" ]; then
-        node mayor.js "$NAME" "$PAPER" "$PORT" "$BMM_MAYOR_JAR" > "$log" 2>&1 || status=1
-      else echo "SKIP  mayor  [set BMM_MAYOR_JAR]" | tee "$log"; fi ;;
+    posse) # The real Posse: BMM_POSSE_JAR.
+      if [ -f "${BMM_POSSE_JAR:-}" ]; then
+        node posse.js "$NAME" "$PAPER" "$PORT" "$BMM_POSSE_JAR" > "$log" 2>&1 || status=1
+      else echo "SKIP  posse  [set BMM_POSSE_JAR]" | tee "$log"; fi ;;
     *) echo "Unknown test: $test"; status=1; continue ;;
   esac
   grep -E "^(FAIL|SKIP)|^SUMMARY|CRASHED" "$log" || true

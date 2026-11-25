@@ -26,10 +26,10 @@ public record HudConfig(
     public enum ShareAudience {
         /** Nobody: sharing is off. The default. */
         OFF("off"),
-        /** Whoever Mayor's player groups allow, the same as chat. Off (fail closed) if Mayor 0.5.0+ isn't running. */
-        MAYOR("mayor"),
-        /** Players in the sender's world group whom Mayor's player groups also allow. Off without Mayor 0.5.0+. */
-        MAYOR_WORLD_GROUP("mayor-world-group"),
+        /** Whoever Posse's player groups allow, the same as chat. Off (fail closed) if Posse 0.5.0+ isn't running. */
+        POSSE("posse"),
+        /** Players in the sender's world group whom Posse's player groups also allow. Off without Posse 0.5.0+. */
+        POSSE_WORLD_GROUP("posse-world-group"),
         /** Players in the sender's exact world. */
         WORLD("world"),
         /** Players in the sender's world, counting its _nether and _the_end as the same world. */
@@ -52,22 +52,11 @@ public record HudConfig(
             return null;
         }
 
-        /**
-         * share.audience, or for a config written before it existed, the narrowest mode matching the older keys, so an
-         * upgrade never widens sharing: enabled false is off; require-mayor true (their default) is mayor with
-         * all-online and mayor-world-group otherwise; require-mayor false is world-group, because all-online without a
-         * filtering plugin stayed in the world group. With none of them set, off. An unknown value is off.
-         */
-        public static ShareAudience resolve(String audience, Boolean enabled, Boolean requireMayor, String candidates) {
-            if (audience != null) {
-                ShareAudience a = of(audience);
-                return a == null ? OFF : a;
-            }
-            if (enabled == null && requireMayor == null && candidates == null) return OFF;
-            if (Boolean.FALSE.equals(enabled)) return OFF;
-            boolean allOnline = "all-online".equalsIgnoreCase(candidates);
-            if (!Boolean.FALSE.equals(requireMayor)) return allOnline ? MAYOR : MAYOR_WORLD_GROUP;
-            return WORLD_GROUP;
+        /** share.audience. Nothing set is off, and so is an unknown value, which fails closed. */
+        public static ShareAudience resolve(String audience) {
+            if (audience == null) return OFF;
+            ShareAudience a = of(audience);
+            return a == null ? OFF : a;
         }
     }
 
@@ -177,13 +166,10 @@ public record HudConfig(
                 c.getBoolean("pack.bedrock-exempt", true),
                 c.getBoolean("pack.re-send-on-removal", true));
 
-        // Read without the jar's defaults, so an older config with no share.audience keeps what its old keys said.
+        // Read without the jar's defaults, so a config with no share.audience is off. Older share keys aren't read.
         String audienceKey = c.contains("share.audience", true) ? c.getString("share.audience") : null;
         Share share = new Share(
-                ShareAudience.resolve(audienceKey,
-                        c.contains("share.enabled", true) ? c.getBoolean("share.enabled") : null,
-                        c.contains("share.require-mayor", true) ? c.getBoolean("share.require-mayor") : null,
-                        c.contains("share.candidates", true) ? c.getString("share.candidates") : null),
+                ShareAudience.resolve(audienceKey),
                 audienceKey != null && ShareAudience.of(audienceKey) == null,
                 clamp(c.getInt("share.cooldown-seconds", 30), 0, 3600),
                 c.getBoolean("share.log", true));
