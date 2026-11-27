@@ -34,7 +34,7 @@ If BlueMap stores its maps in SQL, set `tiles.source: http`.
 | `/hud`, `/hud on`, `/hud off` | Toggles the minimap. The choice is saved per player. |
 | `/hud zoom <n\|in\|out>` | Sets blocks per cell: 1, 2, 4, 8, 16, 32 or 64. |
 | `/hud size small\|medium\|large` | Sets the size to 24, 32 or 40 cells. |
-| `/hud offset <x> <y>` | Moves the minimap, in GUI pixels from top centre. |
+| `/hud offset <x> <y>` | Moves the minimap, in GUI pixels from top center. |
 | `/hud corner left\|right\|center` | Moves it to a rough preset position. |
 | `/hud hide\|show coords\|players\|markers\|clock` | Toggles one part of the map. Coordinates show X, Y, Z and facing; the clock adds the in-game time after them. |
 | `/hud share` | Asks who to send your coordinates to: tick people in a dialog, or send to everyone you can. |
@@ -64,7 +64,7 @@ If another plugin owns a name, BlueMapMini backs off: `/map` to `/worldmap`, the
 
 ## Themes and the clock
 
-A theme sets the HUD's colours, the plate behind the coordinates and the look of the clock. Four are built in:
+A theme sets the HUD's colors, the plate behind the coordinates and the look of the clock. Four are built in:
 
 | Theme | Looks like |
 | --- | --- |
@@ -82,10 +82,10 @@ The clock follows the coordinates as a small picture and 24-hour time, such as `
 - `name`: the name players see.
 - `colors`: `text`, `facing`, `time` and `legend` for text, `plate` for the plate, and `self`, `player`, `poi`, `death` and `north` for the map's icons. Each is `#RRGGBB`.
 - `plate-opacity`: from 26 to 255. 255 is solid.
-- `clock.palette`: one character per colour. `.` is transparent.
+- `clock.palette`: one character per color. `.` is transparent.
 - `clock.frames`: 1 to 24 pictures, 9 rows of 9 characters each. They share the day evenly from 00:00, so 8 frames change every 3 hours.
 
-Up to 8 themes fit in the pack. Every built-in theme passes the same readability test, and the plugin warns about one of yours that doesn't. Text needs a WCAG contrast of 4.5:1 against the plate, and three quarters of each clock picture needs 3:1. Both are checked over ten backgrounds from white to black, including the brightest pure colours. A theme that fails still loads, so you can fix it.
+Up to 8 themes fit in the pack. Every built-in theme passes the same readability test, and the plugin warns about one of yours that doesn't. Text needs a WCAG contrast of 4.5:1 against the plate, and three quarters of each clock picture needs 3:1. Both are checked over ten backgrounds from white to black, including the brightest pure colors. A theme that fails still loads, so you can fix it.
 
 ## Sharing coordinates
 
@@ -106,7 +106,7 @@ Up to 8 themes fit in the pack. Every built-in theme passes the same readability
 
 ## Resource packs
 
-The plugin sends its pack alongside any others using the multi-pack API, and players don't see a map until their client confirms it loaded. With `pack.required`, a player who declines the pack is kicked with `pack.kick-message`. A download that fails never kicks: the player plays without the map and is told why, admins are warned, and the pack is offered again when they change worlds or rejoin. Its only file outside its own namespace is a transparent boss bar texture, in pink by default. If another pack restyles that colour, set `pack.boss-bar-color` to one it leaves alone.
+The plugin sends its pack alongside any others using the multi-pack API, and players don't see a map until their client confirms it loaded. With `pack.required`, a player who declines the pack is kicked with `pack.kick-message`. A download that fails never kicks: the player plays without the map and is told why, admins are warned, and the pack is offered again when they change worlds or rejoin. Its only file outside its own namespace is a transparent boss bar texture, in pink by default. If another pack restyles that color, set `pack.boss-bar-color` to one it leaves alone.
 
 **Using it with Magic.** Magic sends its pack with Bukkit's older one-pack method, which clears every other server pack. BlueMapMini re-sends its pack once when that happens, but it's better to stop the conflict. In `plugins/Magic/config.yml` set `resource_pack: ""`, then add Magic's pack to your main pack.
 
@@ -118,35 +118,35 @@ The plugin sends its pack alongside any others using the multi-pack API, and pla
 
 ## Known limits
 
-- **Screen position:** the server can't see a player's screen size, so the map starts at top centre. Players can move it with `/hud offset` or `/hud corner`.
+- **Screen position:** the server can't see a player's screen size, so the map starts at top center. Players can move it with `/hud offset` or `/hud corner`.
 - **Other boss bars:** the minimap hides for Adventure boss bars, registered Bukkit bars and the Wither and Ender Dragon. A bar made with Bukkit's unregistered `createBossBar` can't be detected, so the minimap stays up and the two share the screen.
 - **Clock:** it shows the in-game time of the world you're in, in steps of `hud.clock.step-minutes`. It doesn't show in worlds where time stands still.
 - **Coordinates:** the coordinate line is part of the minimap, so it hides whenever the minimap does, including during boss fights and with `/hud off`. In `/hud mode coords` it follows the same rules, apart from also showing where BlueMap has no map. The fullscreen map always shows it.
 - **Vertical position:** `/hud offset y` moves in whole map cells, up to `hud.max-offset-y`.
 - **Action bar mode:** the map sits above the hotbar and can flicker if another plugin also uses the action bar. The fullscreen map still uses a boss bar.
-- **Other pink boss bars:** the pack makes one boss bar colour transparent, so another plugin's bar in that colour disappears too. Choose a colour with `pack.boss-bar-color` that nothing else uses.
+- **Other pink boss bars:** the pack makes one boss bar color transparent, so another plugin's bar in that color disappears too. Choose a color with `pack.boss-bar-color` that nothing else uses.
 - **Repeated pack wipes:** the pack is re-sent once per session. If another plugin clears packs again, the map stays hidden for that player until they rejoin. This is what stops two plugins fighting in a loop.
 - **Bedrock players:** Geyser and Floodgate players don't get a map, because they can't use the pack.
 
 ## How it works
 
-Each map cell is one or more characters in a generated font, coloured with hex text colour and with the shadow turned off, so a whole map is a single text component shown as a boss bar title. Colours come from BlueMap's low-res tiles, which are shrunk once and cached in 64x64 cell chunks by two background threads.
+Each map cell is one or more characters in a generated font, colored with hex text color and with the shadow turned off, so a whole map is a single text component shown as a boss bar title. Colors come from BlueMap's low-res tiles, which are shrunk once and cached in 64x64 cell chunks by two background threads.
 
 Every 5 ticks the main thread copies each player's state, and background threads compare it with the last frame. If nothing visible changed, nothing is sent. The clock counts as a change once per step.
 
 Measured in the test suite on a synthetic map:
 
-| | Result | Budget |
+| Measurement | Result | Budget |
 | --- | --- | --- |
 | Minimap frame build | about 40 µs | 1 ms |
 | Minimap update, 32x32 with 20 players, compressed | about 1.7 KB | 5 KB |
 | Fullscreen update, 96x54, compressed | about 4.5 KB | none |
 
-Real terrain has more colour variation than the test map, so expect larger updates in play. `/bluemapmini debug` reports sizes before compression.
+Real terrain has more color variation than the test map, so expect larger updates in play. `/bluemapmini debug` reports sizes before compression.
 
 ## Testing
 
-`./gradlew build` compiles against the Paper 26.1.2 API, the oldest supported, and runs the tests. They include a simulated client that loads the generated pack and draws frames using the font rules read from the Minecraft 26.3 client: glyph advance, the `ascent <= height` check and text centring. It checks that every map cell lands on the right pixels and that no frame drifts.
+`./gradlew build` compiles against the Paper 26.1.2 API, the oldest supported, and runs the tests. They include a simulated client that loads the generated pack and draws frames using the font rules read from the Minecraft 26.3 client: glyph advance, the `ascent <= height` check and text centering. It checks that every map cell lands on the right pixels and that no frame drifts.
 
 The plugin has also been tested on live Paper 26.1.2, 26.2 and 26.3 servers with BlueMap 5.29. A protocol bot played the client. It speaks the 1.21.11 protocol and joined through ViaBackwards, so the packets were translated rather than sent by a real 26.x client. Every frame it received was decoded and compared cell by cell with BlueMap's tile files on disk.
 
@@ -157,12 +157,12 @@ The live tests are in [`test/live`](test/live/README.md), with what they cover a
 - **Map accuracy:** every zoom level, every size, all three dimensions, negative coordinates, unrendered areas and the fullscreen map. Re-rendered tiles reach the HUD within the refresh time.
 - **Icons and text:** the X, Y, Z and facing readout, heading arrows at all 8 compass points, player dots, POI markers and labels (including accents, CJK and very long labels), edge arrows, the death point and coordinates.
 - **Clock:** the right time and picture at noon, dusk, midnight and sunrise, nothing new sent inside a step, the line never moving as the time changes, `/hud hide clock`, no clock in the Nether, and the minimap and fullscreen map.
-- **Themes:** every theme's clock, plate and colours, the same size line in each, `/hud theme` listing and switching, saved choices, the server's default, unknown names, and a server's own theme loading, failing to parse, or warned as hard to read.
-- **Sharing:** one person, everyone in the world group (the Nether included, another world not), players who turned shares off, the send and receive permissions, players hidden from the sender, a rules plugin removing a recipient or cancelling the share, `all-online` with and without a filter, the cooldown, `share.enabled: false`, and the dialog's contents.
+- **Themes:** every theme's clock, plate and colors, the same size line in each, `/hud theme` listing and switching, saved choices, the server's default, unknown names, and a server's own theme loading, failing to parse, or warned as hard to read.
+- **Sharing:** one person, everyone in the world group (the Nether included, another world not), players who turned shares off, the send and receive permissions, players hidden from the sender, a rules plugin removing a recipient or canceling the share, `all-online` with and without a filter, the cooldown, `share.enabled: false`, and the dialog's contents.
 - **One boss bar:** the map and coordinates share a single bar. A second never appeared through every `/hud` option, fullscreen, sneak + F, reloads, pack re-sends, auto-hide and a full `/reload`.
 - **Hiding:** vanish, `hidePlayer`, spectators, invisibility, players hidden in BlueMap, the radius, other dimensions, permissions, other boss bars, the Wither, the Ender Dragon and every `auto-hide` setting.
 - **Updates:** nothing is sent while idle apart from each clock step, and at most 4 updates a second otherwise.
-- **Pack handling:** required, optional and declined packs, failed downloads (no kick, a message, an admin warning and a retry on world change), `host`, `public-url` with and without `{sha1}`, the hosted-pack check (matching, stale, missing, unreachable, never answering, invalid and turned off), `send: false`, bar colours, custom icons, and another plugin wiping packs with the old one-pack method.
+- **Pack handling:** required, optional and declined packs, failed downloads (no kick, a message, an admin warning and a retry on world change), `host`, `public-url` with and without `{sha1}`, the hosted-pack check (matching, stale, missing, unreachable, never answering, invalid and turned off), `send: false`, bar colors, custom icons, and another plugin wiping packs with the old one-pack method.
 - **Life cycle:** `/bluemapmini reload`, `/bluemap reload`, a full `/reload`, server restarts, saved settings and quick join/quits.
 - **Bad data:** corrupt tiles, a wrong web root, an unreachable webserver and the far edge of the world.
 - **Other setups:** the action bar channel, the HTTP source, and command back-off from another plugin's `plugin.yml` commands.
@@ -175,7 +175,7 @@ The live tests are in [`test/live`](test/live/README.md), with what they cover a
 
 **20 moving players, one minute, on real terrain.** 26.3 is this release, with themes and the clock; 26.1.2 and 26.2 were measured on the build just before them:
 
-| | Paper 26.1.2 | Paper 26.2 | Paper 26.3 | Budget |
+| Measurement | Paper 26.1.2 | Paper 26.2 | Paper 26.3 | Budget |
 | --- | --- | --- | --- | --- |
 | Average frame build | 73 µs | 84 µs | 63 µs | 1 ms |
 | Update size, compressed (95th percentile) | 2.3 KB | 2.3 KB | 2.1 KB | 5 KB |
@@ -192,7 +192,7 @@ These ran on a shared machine with other test servers running, so tick times var
 - ZigZag loaded alongside the pack in a client. It overlaps only on the pink boss bar textures, which this pack replaces.
 - A Bedrock join, including Floodgate detection through `paper-plugin.yml`'s classpath sharing, MySQL or PostgreSQL storage, and back-off from another plugin's Brigadier commands.
 
-To check a real client, join as an op and run `/bluemapmini debug pattern`. You should see a sharp colour gradient with a white border and no bar behind it.
+To check a real client, join as an op and run `/bluemapmini debug pattern`. You should see a sharp color gradient with a white border and no bar behind it.
 
 ## Building
 
